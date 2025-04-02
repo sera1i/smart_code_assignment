@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Submission</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <span>Welcome, {{ username }}</span>
+            <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+        </div>
+    </nav>
+    
+    <div class="submission-detail-container">
+        <h1>Submission Details</h1>
+        
+        <div class="submission-summary">
+            <h2>Summary</h2>
+            <p>Assignment ID: {{ submission.assignment_id }}</p>
+            <p>Score: {{ submission.score }} / 100</p>
+            <p>Code Quality: {{ submission.code_quality_score }} / 100</p>
+            <p>Plagiarism: {{ submission.plagiarism_score }} / 100</p>
+            <p>Submission Time: {{ submission.submission_time.strftime('%Y-%m-%d %H:%M') }}</p>
+        </div>
+        
+        <div class="test-results">
+            <h2>Test Case Results</h2>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Test Case</th>
+                        <th>Input</th>
+                        <th>Expected Output</th>
+                        <th>Actual Output</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set test_results = submission.evaluation_results|replace("'", '"')|from_json %}
+                    {% for result in test_results.test_results %}
+                        <tr class="{{ 'passed' if result.passed else 'failed' }}">
+                            <td>{{ loop.index }}</td>
+                            <td>{{ result.input }}</td>
+                            <td>{{ result.expected_output }}</td>
+                            <td>{{ result.actual_output }}</td>
+                            <td>{{ 'Passed' if result.passed else 'Failed' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

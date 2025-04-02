@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Plagiarism Report</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <span>Welcome, {{ session.username }}</span>
+            <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+        </div>
+    </nav>
+    
+    <div class="report-container">
+        <h1>Plagiarism Report for Assignment {{ assignment.id }}</h1>
+        <h2>{{ assignment.title }}</h2>
+        
+        <div class="report-content">
+            <h3>Similarity Scores</h3>
+            <table class="similarity-table">
+                <thead>
+                    <tr>
+                        <th>Student 1</th>
+                        <th>Student 2</th>
+                        <th>Similarity (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in plagiarism_data %}
+                        <tr>
+                            <td>{{ data.student1 }}</td>
+                            <td>{{ data.student2 }}</td>
+                            <td>{{ data.similarity|round(2) }}%</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

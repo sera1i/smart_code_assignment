@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Smart Code Assignment Evaluator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-code me-2"></i>Smart Code Evaluator
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('assignments') }}">Assignments</a>
+                    </li>
+                    {% if current_user.role == 'instructor' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('create_assignment') }}">Create Assignment</a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>{{ current_user.first_name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#">Profile</a></li>
+                            <li><a class="dropdown-item" href="#">Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-md-12">
+                <h1 class="mb-4">
+                    {% if current_user.role == 'student' %}
+                    Student Dashboard
+                    {% else %}
+                    Instructor Dashboard
+                    {% endif %}
+                </h1>
+            </div>
+        </div>
+
+        {% if current_user.role == 'instructor' %}
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-primary h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Total Students</div>
+                                <div class="h5 mb-0 font-weight-bold">{{ stats.total_students }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-users fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-success h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                    Total Assignments</div>
+                                <div class="h5 mb-0 font-weight-bold">{{ stats.total_assignments }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-info h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                    Total Submissions</div>
+                                <div class="h5 mb-0 font-weight-bold">{{ stats.total_submissions }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-file-code fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-warning h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                    Pending Grading</div>
+                                <div class="h5 mb-0 font-weight-bold">0</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-clock fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-xl-8 col-lg-7">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">Assignment Submission Trends</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-area">
+                            <canvas id="submissionTrendsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4 col-lg-5">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">Score Distribution</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-pie">
+                            <canvas id="scoreDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Assignment Performance</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="assignmentTable" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Assignment</th>
+                                        <th>Due Date</th>
+                                        <th>Submissions</th>
+                                        <th>Average Score</th>
+                                        <th>Plagiarism Cases</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for assignment_stat in stats.assignment_stats %}
+                                    <tr>
+                                        <td>{{ assignment_stat.title }}</td>
+                                        <td>{{ assignment_stat.due_date }}</td>
+                                        <td>{{ assignment_stat.submissions }}</td>
+                                        <td>{{ "%.2f"|format(assignment_stat.avg_score) }}</td>
+                                        <td>0</td>
+                                        <td>
+                                            <a href="{{ url_for('view_assignment', assignment_id=assignment_stat.id) }}" class="btn btn-info btn-sm">View</a>
+                                            <a href="{{ url_for('plagiarism_report', assignment_id=assignment_stat.id) }}" class="btn btn-warning btn-sm">Plagiarism</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% else %}
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-primary h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Total Assignments</div>
+                                <div class="h5 mb-0 font-weight-bold">{{ assignments|length }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-success h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                    Completed</div>
+                                <div class="h5 mb-0 font-weight-bold">{{ submissions|length }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-warning h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                    Pending</div>
+                                <div class="h5 mb-0 font-weight-bold">{{ assignments|length - submissions|length }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-exclamation-circle fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-info h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Average Score</div>
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col-auto">
+                                        <div class="h5 mb-0 mr-3 font-weight-bold">
+                                            {% if submissions|length > 0 %}
+                                                {% set total_score = 0 %}
+                                                {% for submission in submissions %}
+                                                    {% set total_score = total_score + submission.score %}
+                                                {% endfor %}
+                                                {{ "%.2f"|format(total_score / submissions|length) }}%
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-xl-8 col-lg-7">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">Your Performance</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-area">
+                            <canvas id="studentPerformanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4 col-lg-5">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Upcoming Deadlines</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="deadline-list">
+                            {% set has_upcoming = false %}
+                            {% for assignment in assignments %}
+                                {% if assignment.due_date > now %}
+                                    {% set has_upcoming = true %}
+                                    <div class="deadline-item mb-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-0">{{ assignment.title }}</h6>
+                                                <small class="text-muted">Due: {{ assignment.due_date.strftime('%Y-%m-%d %H:%M') }}</small>
+                                            </div>
+                                            <a href="{{ url_for('view_assignment', assignment_id=assignment.id) }}" class="btn btn-sm btn-primary">View</a>
+                                        </div>
+                                        {% set time_diff = (assignment.due_date - now).days %}
+                                        {% if time_diff < 3 %}
+                                            <div class="progress mt-2" style="height: 5px;">
+                                                <div class="progress-bar bg-danger" style="width: {{ (3 - time_diff) * 33 }}%"></div>
+                                            </div>
+                                        {% elif time_diff < 7 %}
+                                            <div class="progress mt-2" style="height: 5px;">
+                                                <div class="progress-bar bg-warning" style="width: {{ (7 - time_diff) * 14 }}%"></div>
+                                            </div>
+                                        {% else %}
+                                            <div class="progress mt-2" style="height: 5px;">
+                                                <div class="progress-bar bg-success" style="width: 10%"></div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                            {% if not has_upcoming %}
+                                <p class="text-center text-muted">No upcoming deadlines.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Your Submissions</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="submissionsTable" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Assignment</th>
+                                        <th>Submitted</th>
+                                        <th>Status</th>
+                                        <th>Score</th>
+                                        <th>Feedback</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for submission in submissions %}
+                                    <tr>
+                                        <td>
+                                            {% for assignment in assignments %}
+                                                {% if assignment.id == submission.assignment_id %}
+                                                    {{ assignment.title }}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        <td>{{ submission.submission_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        <td>
+                                            {% for assignment in assignments %}
+                                                {% if assignment.id == submission.assignment_id %}
+                                                    {% if submission.submission_time <= assignment.due_date %}
+                                                        <span class="badge bg-success">On Time</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">Late</span>
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        <td>{{ "%.2f"|format(submission.score) }}</td>
+                                        <td>
+                                            {% set test_results = submission.get_test_results() %}
+                                            {% if test_results %}
+                                                {% set passed = 0 %}
+                                                {% for result in test_results %}
+                                                    {% if result.passed %}
+                                                        {% set passed = passed + 1 %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                                <span class="badge bg-info">{{ passed }}/{{ test_results|length }} Tests Passed</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">No Tests Run</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('submission_result', submission_id=submission.id) }}" class="btn btn-info btn-sm">View</a>
+                                            {% for assignment in assignments %}
+                                                {% if assignment.id == submission.assignment_id and assignment.due_date > now %}
+                                                    <a href="{{ url_for('submit_assignment', assignment_id=assignment.id) }}" class="btn btn-warning btn-sm">Resubmit</a>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <footer class="sticky-footer bg-white">
+        <div class="container my-auto">
+            <div class="copyright text-center my-auto">
+                <span>&copy; 2025 Smart Code Assignment Evaluator</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

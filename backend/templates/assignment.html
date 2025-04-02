@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ assignment.title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <span>Welcome, {{ session.username }}</span>
+            <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+        </div>
+    </nav>
+    
+    <div class="assignment-container">
+        <h1>{{ assignment.title }}</h1>
+        <p>{{ assignment.description }}</p>
+        <p>Deadline: {{ assignment.deadline.strftime('%Y-%m-%d %H:%M') }}</p>
+        <p>Language: {{ assignment.language.upper() }}</p>
+        
+        <form method="POST" action="{{ url_for('submit', assignment_id=assignment.id) }}" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="code_file">Upload Code File</label>
+                <input type="file" id="code_file" name="code_file" accept=".c, .cpp" required>
+            </div>
+            <button type="submit" class="btn">Submit</button>
+        </form>
+    </div>
+</body>
+</html>
